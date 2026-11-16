@@ -4,8 +4,8 @@ A web app that tracks all fixed monthly household bills on one dashboard.
 Bills are sorted by the nearest due date. Color-coded badges show how urgent each bill is.
 
 - **Course:** Full Stack Development Online (Excelr)
-- **Author:** [Your Name]
-- **GitHub:** [your GitHub username]
+- **Author:** Avadhoot
+- **GitHub:** Avadhoot-007
 
 ## What It Does
 
