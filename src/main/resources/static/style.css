@@ -1,0 +1,402 @@
+/* ---------- Basic page setup ---------- */
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background-color: #eef1f8;
+  color: #2b2f3a;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+/* ---------- Buttons and links ---------- */
+button,
+.button-link {
+  display: inline-block;
+  background-color: #2f6fed;
+  color: white;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 20px;
+  text-decoration: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+button:hover,
+.button-link:hover {
+  background-color: #1d4fb5;
+}
+
+/* Smaller colored buttons inside the table */
+td button {
+  padding: 5px 10px;
+  font-size: 13px;
+  line-height: 18px;
+  margin-right: 4px;
+}
+
+.btn-paid {
+  background-color: #2e9e4f;
+}
+
+.btn-paid:hover {
+  background-color: #217a3b;
+}
+
+.btn-edit {
+  background-color: #e08a00;
+}
+
+.btn-edit:hover {
+  background-color: #b36d00;
+}
+
+.btn-delete {
+  background-color: #d32f2f;
+}
+
+.btn-delete:hover {
+  background-color: #a62222;
+}
+
+/* ---------- Login page ---------- */
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  padding: 0;
+  /* Blue to purple background */
+  background: linear-gradient(135deg, #2f6fed, #7b4bd6);
+}
+
+.login-box {
+  background-color: white;
+  padding: 34px;
+  width: 320px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.login-box h1 {
+  color: #2f3a8f;
+  font-size: 26px;
+  margin-bottom: 10px;
+}
+
+/* Hint text under the title */
+.login-box p {
+  color: #666666;
+  font-size: 13px;
+}
+
+/* ---------- Inputs (login and form pages) ---------- */
+label {
+  display: block;
+  margin-top: 14px;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 14px;
+  color: #44495a;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+  border: 1px solid #c5cad8;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  background-color: #fafbfd;
+}
+
+/* Glow when you click inside a box */
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #2f6fed;
+  box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.25);
+  background-color: white;
+}
+
+.login-box button,
+.form-box button {
+  margin-top: 20px;
+  width: 100%;
+  padding: 11px;
+}
+
+/* Error text is red and bold */
+.login-box .error-text,
+.error-text {
+  color: #d32f2f;
+  font-weight: bold;
+  margin-top: 12px;
+}
+
+/* ---------- Top bar (blue banner) ---------- */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+  padding: 18px 24px;
+  border-radius: 12px;
+  color: white;
+  background: linear-gradient(135deg, #2f6fed, #7b4bd6);
+  box-shadow: 0 4px 12px rgba(47, 111, 237, 0.35);
+}
+
+/* Buttons on the banner are white */
+.top-bar button,
+.top-bar .button-link {
+  background-color: white;
+  color: #2f3a8f;
+  margin-left: 8px;
+}
+
+.top-bar button:hover,
+.top-bar .button-link:hover {
+  background-color: #e3e8ff;
+}
+
+/* ---------- Form page ---------- */
+.form-box {
+  background-color: white;
+  padding: 28px;
+  max-width: 420px;
+  border-radius: 12px;
+  border-top: 5px solid #2f6fed;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+/* ---------- Summary cards ---------- */
+.cards {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.card {
+  background-color: white;
+  flex: 1;
+  padding: 18px 20px;
+  border-radius: 12px;
+  border-top: 5px solid #2f6fed;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.card h3 {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: #666b7a;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.card p {
+  margin: 0;
+  font-size: 28px;
+  font-weight: bold;
+  color: #2f6fed;
+}
+
+/* Card 2 (Paid) is green */
+.card:nth-child(2) {
+  border-top-color: #2e9e4f;
+}
+
+.card:nth-child(2) p {
+  color: #2e9e4f;
+}
+
+/* Card 3 (Pending) is orange */
+.card:nth-child(3) {
+  border-top-color: #fb8c00;
+}
+
+.card:nth-child(3) p {
+  color: #fb8c00;
+}
+
+/* ---------- Filter ---------- */
+.filter-bar {
+  margin-bottom: 14px;
+  padding: 12px 16px;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filter-bar label {
+  display: inline;
+  margin-right: 10px;
+}
+
+.filter-bar select {
+  width: 180px;
+}
+
+/* ---------- Bills table ---------- */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background-color: white;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+th,
+td {
+  padding: 13px 14px;
+  text-align: left;
+  border-bottom: 1px solid #e4e7ef;
+}
+
+/* Dark blue header row */
+th {
+  background-color: #2f3a8f;
+  color: white;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Rounded table corners */
+th:first-child {
+  border-top-left-radius: 12px;
+}
+
+th:last-child {
+  border-top-right-radius: 12px;
+}
+
+tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 12px;
+}
+
+tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 12px;
+}
+
+/* Light stripes on every second row */
+tbody tr:nth-child(even) {
+  background-color: #f6f8fd;
+}
+
+/* Row highlights when the mouse is over it */
+tbody tr:hover {
+  background-color: #e3e9ff;
+}
+
+/* ---------- Status badges ---------- */
+.badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 14px;
+  color: white;
+  font-size: 13px;
+  font-weight: bold;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+/* Overdue: red, fast blink */
+.badge-overdue {
+  background-color: #e53935;
+  animation: blink-fast 0.6s infinite;
+}
+
+/* Due in 0 to 3 days: orange, medium blink */
+.badge-3days {
+  background-color: #fb8c00;
+  animation: blink-medium 1.2s infinite;
+}
+
+/* Due in 4 to 7 days: yellow, soft pulse */
+.badge-7days {
+  background-color: #f9a825;
+  animation: pulse-soft 2s infinite;
+}
+
+/* Due in 8 to 10 days: blue, no animation */
+.badge-10days {
+  background-color: #1e88e5;
+}
+
+/* More than 10 days: grey, no animation */
+.badge-upcoming {
+  background-color: #888888;
+}
+
+/* Paid this month: green, no animation */
+.badge-paid {
+  background-color: #2e9e4f;
+}
+
+/* ---------- Animations ---------- */
+@keyframes blink-fast {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes blink-medium {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-soft {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ---------- Small screens ---------- */
+@media (max-width: 700px) {
+  .cards {
+    flex-direction: column;
+  }
+  .top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .top-bar button,
+  .top-bar .button-link {
+    margin-left: 0;
+    margin-right: 8px;
+  }
+  table {
+    display: block;
+    overflow-x: auto;
+  }
+}

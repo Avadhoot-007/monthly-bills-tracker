@@ -1,0 +1,9 @@
+# Copy this file to application.properties and put your real password in the copy
+
+# Database address and name
+spring.datasource.url=jdbc:mysql://localhost:3306/monthly_bills_db
+# Your MySQL login (change the password)
+spring.datasource.username=root
+spring.datasource.password=YOUR_PASSWORD
+# Table already exists, so do not change it
+spring.jpa.hibernate.ddl-auto=none

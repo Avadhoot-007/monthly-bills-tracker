@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Monthly Bills - Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Top bar -->
+    <div class="top-bar">
+      <h1>Monthly Bills Dashboard</h1>
+      <div>
+        <a href="bill-form.html" class="button-link">+ Add Bill</a>
+        <button onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <!-- Summary cards. JavaScript fills the numbers -->
+    <div class="cards">
+      <div class="card">
+        <h3>Total Monthly Spend</h3>
+        <p id="total-amount">0</p>
+      </div>
+      <div class="card">
+        <h3>Paid</h3>
+        <p id="paid-amount">0</p>
+      </div>
+      <div class="card">
+        <h3>Pending</h3>
+        <p id="pending-amount">0</p>
+      </div>
+    </div>
+
+    <!-- Filter by bill type -->
+    <div class="filter-bar">
+      <label>Filter by type:</label>
+      <select id="type-filter" onchange="showBills()">
+        <option value="All">All</option>
+        <option value="Utilities">Utilities</option>
+        <option value="Investment">Investment</option>
+        <option value="Loan">Loan</option>
+        <option value="Subscription">Subscription</option>
+      </select>
+    </div>
+
+    <!-- Bills table. JavaScript fills the rows -->
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Type</th>
+          <th>Amount</th>
+          <th>Due Day</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="bills-body"></tbody>
+    </table>
+
+    <script src="dashboard.js"></script>
+  </body>
+</html>

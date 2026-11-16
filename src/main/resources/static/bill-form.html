@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Monthly Bills - Bill Form</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="top-bar">
+      <!-- JavaScript changes this to "Edit Bill" when needed -->
+      <h1 id="form-heading">Add Bill</h1>
+      <a href="dashboard.html" class="button-link">Back to Dashboard</a>
+    </div>
+
+    <div class="form-box">
+      <label>Title</label>
+      <input type="text" id="title" />
+
+      <label>Type</label>
+      <select id="bill-type">
+        <option value="Utilities">Utilities</option>
+        <option value="Investment">Investment</option>
+        <option value="Loan">Loan</option>
+        <option value="Subscription">Subscription</option>
+      </select>
+
+      <label>Amount (Rs)</label>
+      <input type="number" id="amount" />
+
+      <label>Due Day of Month (1 to 31)</label>
+      <input type="number" id="due-day" min="1" max="31" />
+
+      <label>Notes (optional)</label>
+      <input type="text" id="notes" />
+
+      <!-- saveBill() will be written in form.js -->
+      <button onclick="saveBill()">Save Bill</button>
+
+      <!-- Error message shows here -->
+      <p id="form-message" class="error-text"></p>
+    </div>
+
+    <script src="form.js"></script>
+  </body>
+</html>
