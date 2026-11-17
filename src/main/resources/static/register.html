@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -12,13 +12,23 @@
       <p>Username: 3 to 50 characters. Password: 6 to 50 characters.</p>
 
       <label for="username">Username</label>
-      <input type="text" id="username" maxlength="50" />
+      <input type="text" id="username" maxlength="50" autocomplete="username" />
 
       <label for="password">Password</label>
-      <input type="password" id="password" maxlength="50" />
+      <input
+        type="password"
+        id="password"
+        maxlength="50"
+        autocomplete="new-password"
+      />
 
       <label for="confirm-password">Confirm Password</label>
-      <input type="password" id="confirm-password" maxlength="50" />
+      <input
+        type="password"
+        id="confirm-password"
+        maxlength="50"
+        autocomplete="new-password"
+      />
 
       <!-- register() is written in register.js -->
       <button onclick="register()">Register</button>
