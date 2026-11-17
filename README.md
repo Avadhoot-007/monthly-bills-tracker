@@ -15,6 +15,7 @@ You add each recurring bill once, with its due day of the month (1 to 31).
 The dashboard compares today's date with each due day and shows a status badge.
 Click **Mark Paid** to stop the alert for the current month.
 The next month, the bill becomes unpaid again on its own.
+If you skip a month, the bill stays **Overdue** until you pay the missed month.
 
 ### Bill types
 
@@ -27,26 +28,39 @@ The next month, the bill becomes unpaid again on its own.
 
 - Register and log in with a username and password
 - Passwords are stored as BCrypt hashes, never as plain text
+- The session id changes at login (blocks session fixation)
 - Each user sees only their own bills
 - Add, edit, and delete bills
 - Dashboard cards: total monthly spend, paid amount, pending amount
 - Color-coded blinking badges for urgency
 - Mark Paid and Mark Unpaid button
+- Missed months carry over. Unpaid months show as Overdue
+- **Pay Oldest Month** clears missed months one at a time
 - Filter the table by bill type
 - Server-side checks on every bill (title, amount, due day, type, notes)
 - Expired login sends you back to the login page
 - Due day 31 works in shorter months (it uses the last day of the month)
 
+## How Paid Tracking Works
+
+- `paid_month` means "paid through". Every month up to it is paid.
+- `created_month` is the month the bill was added. Earlier months are never owed.
+- Missed months are the months between `paid_month` and last month.
+- **Mark Paid** pays the oldest unpaid month first.
+- **Mark Unpaid** undoes the current month only.
+- The server sets both fields. The browser cannot change them.
+
 ## Badge Rules
 
-| Badge               | When it shows                             | Look                 |
-| ------------------- | ----------------------------------------- | -------------------- |
-| Overdue             | Due day has passed and the bill is unpaid | Red, fast blink      |
-| Due in 0 to 3 days  | 0 to 3 days left and unpaid               | Orange, medium blink |
-| Due in 4 to 7 days  | 4 to 7 days left and unpaid               | Yellow, soft pulse   |
-| Due in 8 to 10 days | 8 to 10 days left and unpaid              | Blue, no animation   |
-| Upcoming            | More than 10 days left                    | Grey, no animation   |
-| Paid                | Marked paid for the current month         | Green, no animation  |
+| Badge               | When it shows                                        | Look                 |
+| ------------------- | ---------------------------------------------------- | -------------------- |
+| Overdue: N months   | One or more earlier months are unpaid                | Red, fast blink      |
+| Overdue by N days   | Due day has passed this month and the bill is unpaid | Red, fast blink      |
+| Due in 0 to 3 days  | 0 to 3 days left and unpaid                          | Orange, medium blink |
+| Due in 4 to 7 days  | 4 to 7 days left and unpaid                          | Yellow, soft pulse   |
+| Due in 8 to 10 days | 8 to 10 days left and unpaid                         | Blue, no animation   |
+| Upcoming            | More than 10 days left                               | Grey, no animation   |
+| Paid                | Paid through the current month                       | Green, no animation  |
 
 ## Tech Stack
 
@@ -152,12 +166,7 @@ billreminder/
    Register a user named `demo` first.
    Then run `database/sample_data.sql` in MySQL.
    It gives `demo` 8 sample bills.
-
-### Upgrading from an older version
-
-Older versions had no `users` table and no `user_id` column.
-Drop the old `monthly_bills_db` database and run the new `database/schema.sql`.
-Old bills are lost.
+   Rows with no `created_month` count as created this month.
 
 ## REST API
 
@@ -174,14 +183,14 @@ All `/api/bills` endpoints need a logged-in session. Without one they return `40
 
 ### Bills
 
-| Method | Address                       | What it does                          |
-| ------ | ----------------------------- | ------------------------------------- |
-| GET    | `/api/bills`                  | List your bills                       |
-| GET    | `/api/bills/{id}`             | Get one of your bills                 |
-| POST   | `/api/bills`                  | Add a bill                            |
-| PUT    | `/api/bills/{id}`             | Edit a bill                           |
-| DELETE | `/api/bills/{id}`             | Delete a bill                         |
-| POST   | `/api/bills/{id}/toggle-paid` | Switch a bill between Paid and Unpaid |
+| Method | Address                       | What it does                                                   |
+| ------ | ----------------------------- | -------------------------------------------------------------- |
+| GET    | `/api/bills`                  | List your bills                                                |
+| GET    | `/api/bills/{id}`             | Get one of your bills                                          |
+| POST   | `/api/bills`                  | Add a bill                                                     |
+| PUT    | `/api/bills/{id}`             | Edit a bill (paid and created months stay unchanged)           |
+| DELETE | `/api/bills/{id}`             | Delete a bill                                                  |
+| POST   | `/api/bills/{id}/toggle-paid` | Undo this month if paid. Otherwise pay the oldest unpaid month |
 
 A bill that does not exist, or belongs to another user, returns `404`.
 Bad values return `400`.
@@ -201,19 +210,20 @@ Two tables: `users` and `bills`.
 
 ### bills
 
-| Column     | Type          | Meaning                                                      |
-| ---------- | ------------- | ------------------------------------------------------------ |
-| id         | INT           | Auto-generated primary key                                   |
-| user_id    | INT           | Owner of the bill. Foreign key to `users.id`                 |
-| title      | VARCHAR(100)  | Bill name                                                    |
-| bill_type  | VARCHAR(30)   | Utilities, Investment, Loan, or Subscription                 |
-| amount     | DECIMAL(10,2) | Monthly amount in rupees                                     |
-| due_day    | INT           | Day of the month, 1 to 31                                    |
-| paid_month | VARCHAR(7)    | Month the bill was paid, like `2026-11`. Empty if never paid |
-| notes      | VARCHAR(255)  | Optional notes                                               |
+| Column        | Type          | Meaning                                                                 |
+| ------------- | ------------- | ----------------------------------------------------------------------- |
+| id            | INT           | Auto-generated primary key                                              |
+| user_id       | INT           | Owner of the bill. Foreign key to `users.id`                            |
+| title         | VARCHAR(100)  | Bill name                                                               |
+| bill_type     | VARCHAR(30)   | Utilities, Investment, Loan, or Subscription                            |
+| amount        | DECIMAL(10,2) | Monthly amount in rupees                                                |
+| due_day       | INT           | Day of the month, 1 to 31                                               |
+| paid_month    | VARCHAR(7)    | Paid through this month, like `2026-11`. Empty if nothing is paid yet   |
+| created_month | VARCHAR(7)    | Month the bill was added, like `2026-09`. Earlier months are never owed |
+| notes         | VARCHAR(255)  | Optional notes                                                          |
 
-A bill counts as paid when `paid_month` equals the current month.
-This is why bills reset on their own each month.
+A bill counts as paid when `paid_month` is the current month or later.
+When a new month starts, `paid_month` falls behind, so the bill becomes unpaid on its own.
 
 ## Known Limitations
 
@@ -221,9 +231,9 @@ This is why bills reset on their own each month.
 - The app uses plain HTTP. Use HTTPS before any real deployment.
 - No login attempt limit, password reset, or account deletion.
 - No CSRF protection.
-- Login keeps the old session id (session fixation). Low risk for a local demo.
 - Login and register replies use HTTP 200 with an error text.
-- An unpaid bill from last month is forgotten when the month rolls over. No overdue carry-over.
+- Summary cards count the current month only. Amounts for missed months are not added.
+- Missed months are tracked per bill as a count. There is no per-month payment record.
 - Java stores money as `double`. The database uses `DECIMAL(10,2)`. Fine at this scale, not for real accounting.
 - The dashboard uses the browser's date. Mark Paid uses the server's month. They differ if the two clocks differ.
 - Deleting a bill is permanent. There is no payment history.
@@ -233,7 +243,6 @@ This is why bills reset on their own each month.
 
 **Future scope**
 
-- Scheduled monthly reset job
 - Email and WhatsApp reminders
 - Payment history archive
 - Variable amount tracking, such as electricity units
