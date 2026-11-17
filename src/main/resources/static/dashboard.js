@@ -46,6 +46,14 @@ function dayWord(number) {
   return number + " days";
 }
 
+// Returns "1 month" or "3 months"
+function monthWord(number) {
+  if (number === 1) {
+    return "1 month";
+  }
+  return number + " months";
+}
+
 // Returns this month as text, like 2026-11
 function getThisMonthText() {
   var today = getToday();
@@ -58,9 +66,35 @@ function getThisMonthText() {
   return year + "-" + monthText;
 }
 
+// Turns "2026-11" into a number so months can be compared
+function monthNumber(text) {
+  var parts = text.split("-");
+  return parseInt(parts[0]) * 12 + parseInt(parts[1]);
+}
+
+// The latest month that is paid, as a number
+function getPaidThrough(bill) {
+  if (bill.paidMonth) {
+    return monthNumber(bill.paidMonth);
+  }
+  if (bill.createdMonth) {
+    return monthNumber(bill.createdMonth) - 1;
+  }
+  return monthNumber(getThisMonthText()) - 1;
+}
+
+// How many earlier months are still unpaid
+function getMissedMonths(bill) {
+  var missed = monthNumber(getThisMonthText()) - 1 - getPaidThrough(bill);
+  if (missed < 0) {
+    return 0;
+  }
+  return missed;
+}
+
 // Returns true if the bill is paid for this month
 function isPaid(bill) {
-  return bill.paidMonth === getThisMonthText();
+  return getPaidThrough(bill) >= monthNumber(getThisMonthText());
 }
 
 // Returns days left until the due day. Negative means it has passed
@@ -83,7 +117,7 @@ function getDaysLeft(bill) {
 
 // Number used for sorting: smaller means more urgent
 function getSortValue(bill) {
-  var value = getDaysLeft(bill);
+  var value = getDaysLeft(bill) - 100 * getMissedMonths(bill);
   if (isPaid(bill)) {
     value = value + 1000; // paid bills go to the bottom
   }
@@ -144,12 +178,16 @@ function showBills() {
     // Show this bill only if it matches the filter
     if (filter === "All" || bill.billType === filter) {
       var daysLeft = getDaysLeft(bill);
+      var missed = getMissedMonths(bill);
       var badgeClass = "";
       var badgeText = "";
 
       if (isPaid(bill)) {
         badgeClass = "badge-paid";
         badgeText = "Paid";
+      } else if (missed > 0) {
+        badgeClass = "badge-overdue";
+        badgeText = "Overdue: " + monthWord(missed) + " unpaid";
       } else if (daysLeft < 0) {
         badgeClass = "badge-overdue";
         badgeText = "Overdue by " + dayWord(0 - daysLeft);
@@ -175,6 +213,8 @@ function showBills() {
       var payButtonText = "Mark Paid";
       if (isPaid(bill)) {
         payButtonText = "Mark Unpaid";
+      } else if (missed > 0) {
+        payButtonText = "Pay Oldest Month";
       }
 
       // Build one table row as text
