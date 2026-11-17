@@ -1,15 +1,30 @@
-// ---------- Login check ----------
-// If the user is not logged in, go back to the login page
-if (localStorage.getItem("loggedIn") !== "yes") {
-  window.location.href = "index.html";
-}
-
 // This list holds all bills loaded from the server
 var allBills = [];
+
+// ---------- Login check ----------
+// Ask the server who is logged in. Go to the login page if nobody is
+function checkLogin() {
+  fetch("/api/auth/me")
+    .then(function (response) {
+      return response.text();
+    })
+    .then(function (name) {
+      if (name === "") {
+        window.location.href = "index.html";
+      } else {
+        document.getElementById("user-name").innerText = "Hi, " + name;
+        loadBills();
+      }
+    })
+    .catch(function () {
+      alert("Could not reach the server. Is it running?");
+    });
+}
 
 // ---------- Date helpers ----------
 
 // Returns today's date. Change the return line only for testing
+// Note: Mark Paid always uses the real server month
 function getToday() {
   return new Date();
 }
@@ -21,6 +36,14 @@ function escapeText(text) {
   result = result.split("<").join("&lt;"); // < becomes &lt;
   result = result.split(">").join("&gt;"); // > becomes &gt;
   return result;
+}
+
+// Returns "1 day" or "5 days"
+function dayWord(number) {
+  if (number === 1) {
+    return "1 day";
+  }
+  return number + " days";
 }
 
 // Returns this month as text, like 2026-11
@@ -73,9 +96,20 @@ function loadBills() {
   // fetch asks the Spring server for data
   fetch("/api/bills")
     .then(function (response) {
+      // 401 means the login has expired
+      if (response.status === 401) {
+        window.location.href = "index.html";
+        return null;
+      }
+      if (!response.ok) {
+        throw new Error("Server error");
+      }
       return response.json(); // turn the reply into a list
     })
     .then(function (data) {
+      if (data === null) {
+        return; // we are leaving this page
+      }
       allBills = data;
       showBills();
     })
@@ -118,23 +152,23 @@ function showBills() {
         badgeText = "Paid";
       } else if (daysLeft < 0) {
         badgeClass = "badge-overdue";
-        badgeText = "Overdue by " + (0 - daysLeft) + " days";
+        badgeText = "Overdue by " + dayWord(0 - daysLeft);
       } else if (daysLeft <= 3) {
         badgeClass = "badge-3days";
         if (daysLeft === 0) {
           badgeText = "Due today";
         } else {
-          badgeText = "Due in " + daysLeft + " days";
+          badgeText = "Due in " + dayWord(daysLeft);
         }
       } else if (daysLeft <= 7) {
         badgeClass = "badge-7days";
-        badgeText = "Due in " + daysLeft + " days";
+        badgeText = "Due in " + dayWord(daysLeft);
       } else if (daysLeft <= 10) {
         badgeClass = "badge-10days";
-        badgeText = "Due in " + daysLeft + " days";
+        badgeText = "Due in " + dayWord(daysLeft);
       } else {
         badgeClass = "badge-upcoming";
-        badgeText = "Due in " + daysLeft + " days";
+        badgeText = "Due in " + dayWord(daysLeft);
       }
 
       // Text on the pay button
@@ -197,13 +231,22 @@ function showBills() {
 
 // ---------- Button actions ----------
 
+// Runs after Mark Paid or Delete finishes
+function afterAction(response) {
+  if (response.status === 401) {
+    window.location.href = "index.html"; // login expired
+  } else {
+    loadBills(); // reload the table
+  }
+}
+
 // Switch a bill between Paid and Unpaid
 function togglePaid(id) {
-  fetch("/api/bills/" + id + "/toggle-paid", { method: "POST" }).then(
-    function () {
-      loadBills(); // reload the table
-    },
-  );
+  fetch("/api/bills/" + id + "/toggle-paid", { method: "POST" })
+    .then(afterAction)
+    .catch(function () {
+      alert("Server not reachable");
+    });
 }
 
 // Open the form page in edit mode
@@ -215,17 +258,24 @@ function editBill(id) {
 function deleteBill(id) {
   var sure = confirm("Delete this bill?");
   if (sure === true) {
-    fetch("/api/bills/" + id, { method: "DELETE" }).then(function () {
-      loadBills();
-    });
+    fetch("/api/bills/" + id, { method: "DELETE" })
+      .then(afterAction)
+      .catch(function () {
+        alert("Server not reachable");
+      });
   }
 }
 
 // Log out and return to the login page
 function logout() {
-  localStorage.removeItem("loggedIn");
-  window.location.href = "index.html";
+  fetch("/api/auth/logout", { method: "POST" })
+    .then(function () {
+      window.location.href = "index.html";
+    })
+    .catch(function () {
+      window.location.href = "index.html";
+    });
 }
 
 // ---------- Start ----------
-loadBills();
+checkLogin();
