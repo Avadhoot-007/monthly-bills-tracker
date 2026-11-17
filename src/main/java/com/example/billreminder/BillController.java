@@ -1,6 +1,6 @@
 package com.example.billreminder;
 
-import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 
@@ -102,6 +102,9 @@ public class BillController {
         newBill.setId(null);
         // Always use the logged-in user, never a user id sent by the browser
         newBill.setUserId(userId);
+        // The server decides these two, never the browser
+        newBill.setPaidMonth(null);
+        newBill.setCreatedMonth(YearMonth.now().toString());
         return billRepository.save(newBill);
     }
 
@@ -118,6 +121,9 @@ public class BillController {
         // Same id means save() updates the old row
         changedBill.setId(id);
         changedBill.setUserId(userId);
+        // Keep the stored values. The browser cannot change them
+        changedBill.setPaidMonth(existing.get().getPaidMonth());
+        changedBill.setCreatedMonth(existing.get().getCreatedMonth());
         return billRepository.save(changedBill);
     }
 
@@ -132,7 +138,8 @@ public class BillController {
         billRepository.delete(existing.get());
     }
 
-    // POST /api/bills/3/toggle-paid : switch Paid and Unpaid
+    // POST /api/bills/3/toggle-paid
+    // Paid this month -> unpay this month. Otherwise pay the oldest unpaid month
     @PostMapping("/{id}/toggle-paid")
     public Bill togglePaid(@PathVariable Integer id, HttpSession session) {
         int userId = getLoggedInUserId(session);
@@ -142,16 +149,29 @@ public class BillController {
         }
         Bill bill = result.get();
 
-        // Build the current month text, like 2026-11
-        String thisMonth = LocalDate.now().toString().substring(0, 7);
+        YearMonth thisMonth = YearMonth.now();
+        YearMonth created = thisMonth;
+        if (bill.getCreatedMonth() != null) {
+            created = YearMonth.parse(bill.getCreatedMonth());
+        }
+        // Nothing paid yet means paid through the month before creation
+        YearMonth paidThrough = created.minusMonths(1);
+        if (bill.getPaidMonth() != null) {
+            paidThrough = YearMonth.parse(bill.getPaidMonth());
+        }
 
-        if (thisMonth.equals(bill.getPaidMonth())) {
-            // Already paid this month, so mark unpaid
+        if (!paidThrough.isBefore(thisMonth)) {
+            paidThrough = thisMonth.minusMonths(1); // undo this month
+        } else {
+            paidThrough = paidThrough.plusMonths(1); // pay the oldest unpaid month
+        }
+
+        if (paidThrough.isBefore(created)) {
             bill.setPaidMonth(null);
         } else {
-            // Not paid yet, so mark paid for this month
-            bill.setPaidMonth(thisMonth);
+            bill.setPaidMonth(paidThrough.toString());
         }
+        bill.setCreatedMonth(created.toString()); // saves the baseline for old rows
         return billRepository.save(bill);
     }
 }
