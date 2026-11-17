@@ -33,6 +33,7 @@ If you skip a month, the bill stays **Overdue** until you pay the missed month.
 - Each user sees only their own bills
 - Add, edit, and delete bills
 - Dashboard cards: total monthly spend, paid amount, pending amount
+- Cards always count all bills. The type filter does not change them
 - Color-coded blinking badges for urgency
 - Mark Paid and Mark Unpaid button
 - Missed months carry over. Unpaid months show as Overdue
@@ -244,4 +245,28 @@ When a new month starts, `paid_month` falls behind, so the bill becomes unpaid o
 ## Known Limitations
 
 - Sessions live in server memory. Restarting the server logs everyone out.
-- The app uses plain HTTP. Use HTTPS before any
+- The app uses plain HTTP. Use HTTPS before any real deployment.
+- No login attempt limit, password reset, or account deletion.
+- No CSRF protection.
+- Login and register replies use HTTP 200 with an error text.
+- Summary cards count the current month only. Amounts for missed months are not added.
+- Missed months are worked out from `paid_month`. There is no per-month payment record.
+- Java stores money as `double`. The database uses `DECIMAL(10,2)`. Fine at this scale, not for real accounting.
+- The dashboard uses the browser's date. Mark Paid uses the server's month. They differ if the two clocks differ.
+- Deleting a bill is permanent. There is no payment history.
+- The only test needs a live MySQL database.
+- The app runs locally only. It is not deployed.
+
+## Planned Features
+
+**Future scope**
+
+- Email and WhatsApp reminders
+- Payment history archive
+- Variable amount tracking, such as electricity units
+- Receipt upload
+- Spend charts by bill type
+
+## Screenshots
+
+Screenshots will be added in a `screenshots` folder.
