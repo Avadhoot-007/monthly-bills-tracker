@@ -17,6 +17,10 @@ public class Bill {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    // The id of the user who owns this bill
+    @Column(name = "user_id")
+    private Integer userId;
+
     private String title;
 
     @Column(name = "bill_type")
@@ -42,6 +46,14 @@ public class Bill {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
     }
 
     public String getTitle() {
