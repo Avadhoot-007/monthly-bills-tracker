@@ -128,8 +128,8 @@ billreminder/
 1. **Get the code.**
 
    ```
-   git clone https://github.com/Avadhoot-007/[repository name].git
-   cd [repository name]
+   git clone https://github.com/Avadhoot-007/monthly-bills-tracker
+   cd monthly-bills-tracker
    ```
 
 2. **Create the database.**
