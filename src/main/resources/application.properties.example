@@ -7,3 +7,11 @@ spring.datasource.username=root
 spring.datasource.password=YOUR_PASSWORD
 # Table already exists, so do not change it
 spring.jpa.hibernate.ddl-auto=none
+
+# No DB session held open during the whole web request
+spring.jpa.open-in-view=false
+
+# Session cookie: blocks cross-site POSTs (basic CSRF defence)
+server.servlet.session.cookie.same-site=lax
+# Auto logout after 30 idle minutes
+server.servlet.session.timeout=30m
