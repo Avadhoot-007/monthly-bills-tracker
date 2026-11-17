@@ -1,20 +1,20 @@
 -- Monthly Bills Tracker database script
 -- Run this once in MySQL Workbench or the MySQL command line
--- It makes a fresh database. It does not delete anything
+-- Safe to run again. It never deletes anything
 
 -- Create and select the database
 CREATE DATABASE IF NOT EXISTS monthly_bills_db;
 USE monthly_bills_db;
 
 -- One row per registered user
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(100) NOT NULL   -- BCrypt hash, never the real password
 );
 
 -- Every bill belongs to one user
-CREATE TABLE bills (
+CREATE TABLE IF NOT EXISTS bills (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     title VARCHAR(100) NOT NULL,
