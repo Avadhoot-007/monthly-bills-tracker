@@ -1,6 +1,7 @@
 package com.example.billreminder;
 
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 // This class answers web requests that start with /api/bills
@@ -23,12 +25,21 @@ import jakarta.servlet.http.HttpSession;
 @RequestMapping("/api/bills")
 public class BillController {
 
+    // "This month" is always counted in India time.
+    // Without this, a server set to UTC flips the month 5.5 hours late
+    private static final ZoneId ZONE = ZoneId.of("Asia/Kolkata");
+
     // Spring gives us the repository automatically
     @Autowired
     private BillRepository billRepository;
 
     // Finds who is logged in. Stops with error 401 if nobody is
-    private int getLoggedInUserId(HttpSession session) {
+    // getSession(false): a request with no login must not create a session
+    private int getLoggedInUserId(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please log in");
+        }
         Integer userId = (Integer) session.getAttribute("userId");
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please log in");
@@ -36,22 +47,37 @@ public class BillController {
         return userId;
     }
 
-    // Stops with error 400 if the bill has bad values
+    // Cleans the text and number fields, then stops with error 400 if bad
     private void checkBill(Bill bill) {
         if (bill.getTitle() == null || bill.getTitle().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title is required");
         }
+        // Save the trimmed title, not the raw one
+        bill.setTitle(bill.getTitle().trim());
         if (bill.getTitle().length() > 100) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title is too long");
         }
+
+        // Round to 2 decimals first. The database keeps exactly 2
+        bill.setAmount(Math.round(bill.getAmount() * 100.0) / 100.0);
         if (bill.getAmount() <= 0 || bill.getAmount() > 99999999) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad amount");
         }
         if (bill.getDueDay() < 1 || bill.getDueDay() > 31) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Due day must be 1 to 31");
         }
-        if (bill.getNotes() != null && bill.getNotes().length() > 255) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Notes are too long");
+
+        // Empty notes are stored as null
+        if (bill.getNotes() != null) {
+            String notes = bill.getNotes().trim();
+            if (notes.length() > 255) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Notes are too long");
+            }
+            if (notes.isEmpty()) {
+                bill.setNotes(null);
+            } else {
+                bill.setNotes(notes);
+            }
         }
 
         // Only these four bill types are allowed
@@ -76,15 +102,15 @@ public class BillController {
 
     // GET /api/bills : return the bills of the logged-in user
     @GetMapping
-    public List<Bill> getAllBills(HttpSession session) {
-        int userId = getLoggedInUserId(session);
+    public List<Bill> getAllBills(HttpServletRequest request) {
+        int userId = getLoggedInUserId(request);
         return billRepository.findByUserId(userId);
     }
 
     // GET /api/bills/3 : return one bill of this user
     @GetMapping("/{id}")
-    public Bill getOneBill(@PathVariable Integer id, HttpSession session) {
-        int userId = getLoggedInUserId(session);
+    public Bill getOneBill(@PathVariable Integer id, HttpServletRequest request) {
+        int userId = getLoggedInUserId(request);
         Optional<Bill> result = billRepository.findByIdAndUserId(id, userId);
         if (!result.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bill not found");
@@ -94,8 +120,8 @@ public class BillController {
 
     // POST /api/bills : add a new bill for this user
     @PostMapping
-    public Bill addBill(@RequestBody Bill newBill, HttpSession session) {
-        int userId = getLoggedInUserId(session);
+    public Bill addBill(@RequestBody Bill newBill, HttpServletRequest request) {
+        int userId = getLoggedInUserId(request);
         // Stop here if the values are bad
         checkBill(newBill);
         // Empty id tells the database to create a new row
@@ -104,14 +130,14 @@ public class BillController {
         newBill.setUserId(userId);
         // The server decides these two, never the browser
         newBill.setPaidMonth(null);
-        newBill.setCreatedMonth(YearMonth.now().toString());
+        newBill.setCreatedMonth(YearMonth.now(ZONE).toString());
         return billRepository.save(newBill);
     }
 
     // PUT /api/bills/3 : change an existing bill of this user
     @PutMapping("/{id}")
-    public Bill updateBill(@PathVariable Integer id, @RequestBody Bill changedBill, HttpSession session) {
-        int userId = getLoggedInUserId(session);
+    public Bill updateBill(@PathVariable Integer id, @RequestBody Bill changedBill, HttpServletRequest request) {
+        int userId = getLoggedInUserId(request);
         // Stop here if the values are bad
         checkBill(changedBill);
         Optional<Bill> existing = billRepository.findByIdAndUserId(id, userId);
@@ -129,8 +155,8 @@ public class BillController {
 
     // DELETE /api/bills/3 : remove a bill of this user
     @DeleteMapping("/{id}")
-    public void deleteBill(@PathVariable Integer id, HttpSession session) {
-        int userId = getLoggedInUserId(session);
+    public void deleteBill(@PathVariable Integer id, HttpServletRequest request) {
+        int userId = getLoggedInUserId(request);
         Optional<Bill> existing = billRepository.findByIdAndUserId(id, userId);
         if (!existing.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bill not found");
@@ -141,23 +167,28 @@ public class BillController {
     // POST /api/bills/3/toggle-paid
     // Paid this month -> unpay this month. Otherwise pay the oldest unpaid month
     @PostMapping("/{id}/toggle-paid")
-    public Bill togglePaid(@PathVariable Integer id, HttpSession session) {
-        int userId = getLoggedInUserId(session);
+    public Bill togglePaid(@PathVariable Integer id, HttpServletRequest request) {
+        int userId = getLoggedInUserId(request);
         Optional<Bill> result = billRepository.findByIdAndUserId(id, userId);
         if (!result.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bill not found");
         }
         Bill bill = result.get();
 
-        YearMonth thisMonth = YearMonth.now();
+        YearMonth thisMonth = YearMonth.now(ZONE);
         YearMonth created = thisMonth;
         if (bill.getCreatedMonth() != null) {
             created = YearMonth.parse(bill.getCreatedMonth());
         }
-        // Nothing paid yet means paid through the month before creation
-        YearMonth paidThrough = created.minusMonths(1);
+        // Nothing paid yet means paid through the month before creation.
+        // A paid month older than that is ignored (months before creation are never owed)
+        YearMonth beforeCreated = created.minusMonths(1);
+        YearMonth paidThrough = beforeCreated;
         if (bill.getPaidMonth() != null) {
             paidThrough = YearMonth.parse(bill.getPaidMonth());
+            if (paidThrough.isBefore(beforeCreated)) {
+                paidThrough = beforeCreated;
+            }
         }
 
         if (!paidThrough.isBefore(thisMonth)) {
