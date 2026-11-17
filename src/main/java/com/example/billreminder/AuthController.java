@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 // This class handles register, login, logout, and "who am I"
@@ -58,7 +59,7 @@ public class AuthController {
     // POST /api/auth/login
     // Returns "OK" or an error message
     @PostMapping("/login")
-    public String login(@RequestBody AuthRequest request, HttpSession session) {
+    public String login(@RequestBody AuthRequest request, HttpServletRequest httpRequest) {
         String username = "";
         if (request.getUsername() != null) {
             username = request.getUsername().trim();
@@ -79,6 +80,10 @@ public class AuthController {
         if (!encoder.matches(password, user.getPasswordHash())) {
             return "Wrong username or password";
         }
+
+        // Fresh session id after login. Blocks session fixation
+        HttpSession session = httpRequest.getSession();
+        httpRequest.changeSessionId();
 
         // Remember this user in the server session
         session.setAttribute("userId", user.getId());
