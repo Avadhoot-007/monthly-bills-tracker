@@ -2,6 +2,9 @@
 // Ask the server who is logged in
 fetch("/api/auth/me")
   .then(function (response) {
+    if (!response.ok) {
+      throw new Error("Server error");
+    }
     return response.text();
   })
   .then(function (name) {
