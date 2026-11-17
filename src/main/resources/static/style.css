@@ -324,7 +324,8 @@ tbody tr:hover {
 
 /* Due in 4 to 7 days: yellow, soft pulse */
 .badge-7days {
-  background-color: #2b2f3a;
+  background-color: #f9c20a;
+  color: #2b2f3a;
   animation: pulse-soft 2s infinite;
 }
 
@@ -421,4 +422,17 @@ tbody tr:hover {
 .user-name {
   margin-right: 10px;
   font-weight: bold;
+}
+
+/* Notes under the bill title */
+.notes {
+  color: #666b7a;
+  font-weight: normal;
+}
+
+/* Respect "reduce motion" system setting. Stops all blinking */
+@media (prefers-reduced-motion: reduce) {
+  .badge {
+    animation: none !important;
+  }
 }
