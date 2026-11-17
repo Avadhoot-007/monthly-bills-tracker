@@ -21,7 +21,19 @@ CREATE TABLE bills (
     bill_type VARCHAR(30) NOT NULL,   -- Utilities, Investment, Loan, Subscription
     amount DECIMAL(10, 2) NOT NULL,
     due_day INT NOT NULL,             -- day of month, 1 to 31
-    paid_month VARCHAR(7),            -- example: 2026-11, empty if never paid
+    paid_month VARCHAR(7),            -- paid through this month, like 2026-11
+    created_month VARCHAR(7),         -- month the bill was added, like 2026-09
     notes VARCHAR(255),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+-- ---------------------------------------------------------------
+-- Upgrading an existing database? Do NOT re-run the script above.
+-- Run only these lines once instead:
+--
+-- USE monthly_bills_db;
+-- ALTER TABLE bills ADD COLUMN created_month VARCHAR(7);
+-- UPDATE bills SET created_month = DATE_FORMAT(CURDATE(), '%Y-%m');
+-- UPDATE bills SET paid_month = NULL
+-- WHERE paid_month < DATE_FORMAT(CURDATE() - INTERVAL 1 MONTH, '%Y-%m');
+-- ---------------------------------------------------------------
