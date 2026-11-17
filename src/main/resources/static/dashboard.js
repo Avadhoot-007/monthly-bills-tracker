@@ -6,6 +6,9 @@ var allBills = [];
 function checkLogin() {
   fetch("/api/auth/me")
     .then(function (response) {
+      if (!response.ok) {
+        throw new Error("Server error");
+      }
       return response.text();
     })
     .then(function (name) {
@@ -35,6 +38,8 @@ function escapeText(text) {
   result = result.split("&").join("&amp;"); // & becomes &amp;
   result = result.split("<").join("&lt;"); // < becomes &lt;
   result = result.split(">").join("&gt;"); // > becomes &gt;
+  result = result.split('"').join("&quot;"); // " becomes &quot;
+  result = result.split("'").join("&#39;"); // ' becomes &#39;
   return result;
 }
 
@@ -74,13 +79,15 @@ function monthNumber(text) {
 
 // The latest month that is paid, as a number
 function getPaidThrough(bill) {
-  if (bill.paidMonth) {
+  // Months before the bill was created are never owed
+  var floor = monthNumber(getThisMonthText()) - 1;
+  if (bill.createdMonth) {
+    floor = monthNumber(bill.createdMonth) - 1;
+  }
+  if (bill.paidMonth && monthNumber(bill.paidMonth) > floor) {
     return monthNumber(bill.paidMonth);
   }
-  if (bill.createdMonth) {
-    return monthNumber(bill.createdMonth) - 1;
-  }
-  return monthNumber(getThisMonthText()) - 1;
+  return floor;
 }
 
 // How many earlier months are still unpaid
@@ -219,7 +226,12 @@ function showBills() {
 
       // Build one table row as text
       rows = rows + "<tr>";
-      rows = rows + "<td>" + escapeText(bill.title) + "</td>";
+      var notesHtml = "";
+      if (bill.notes) {
+        notesHtml =
+          "<br><small class='notes'>" + escapeText(bill.notes) + "</small>";
+      }
+      rows = rows + "<td>" + escapeText(bill.title) + notesHtml + "</td>";
       rows = rows + "<td>" + escapeText(bill.billType) + "</td>";
       rows = rows + "<td>Rs " + bill.amount.toFixed(2) + "</td>";
       rows = rows + "<td>" + bill.dueDay + "</td>";
@@ -235,7 +247,7 @@ function showBills() {
         rows +
         "<button class='btn-paid' onclick='togglePaid(" +
         bill.id +
-        ")'>" +
+        ", this)'>" +
         payButtonText +
         "</button>";
       rows =
@@ -276,15 +288,25 @@ function afterAction(response) {
   if (response.status === 401) {
     window.location.href = "index.html"; // login expired
   } else {
+    // 404 means it is already gone. Reloading shows the truth
+    if (!response.ok && response.status !== 404) {
+      alert("Action failed. Please try again");
+    }
     loadBills(); // reload the table
   }
 }
 
 // Switch a bill between Paid and Unpaid
-function togglePaid(id) {
+function togglePaid(id, button) {
+  if (button) {
+    button.disabled = true;
+  }
   fetch("/api/bills/" + id + "/toggle-paid", { method: "POST" })
     .then(afterAction)
     .catch(function () {
+      if (button) {
+        button.disabled = false;
+      }
       alert("Server not reachable");
     });
 }
@@ -319,3 +341,10 @@ function logout() {
 
 // ---------- Start ----------
 checkLogin();
+
+// Back button after logout restores a cached page. Check login again
+window.addEventListener("pageshow", function (event) {
+  if (event.persisted) {
+    checkLogin();
+  }
+});
