@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Monthly Bills - Register</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="login-page">
+    <div class="login-box">
+      <h1>Create Account</h1>
+      <p>Username: 3 to 50 characters. Password: 6 to 50 characters.</p>
+
+      <label for="username">Username</label>
+      <input type="text" id="username" maxlength="50" />
+
+      <label for="password">Password</label>
+      <input type="password" id="password" maxlength="50" />
+
+      <label for="confirm-password">Confirm Password</label>
+      <input type="password" id="confirm-password" maxlength="50" />
+
+      <!-- register() is written in register.js -->
+      <button onclick="register()">Register</button>
+
+      <!-- Error or success message shows here -->
+      <p id="register-message" class="error-text"></p>
+
+      <p class="link-text">
+        Already have an account? <a href="index.html">Login</a>
+      </p>
+    </div>
+
+    <script src="register.js"></script>
+  </body>
+</html>
