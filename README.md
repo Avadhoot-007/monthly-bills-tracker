@@ -2,7 +2,8 @@
 
 A web app that tracks all fixed monthly household bills on one dashboard.
 Each user has their own account and their own bills.
-Bills are sorted by the nearest due date. Color-coded badges show how urgent each bill is.
+Bills are sorted by urgency. Missed months come first, then the nearest due date. Paid bills go last.
+Color-coded badges show how urgent each bill is.
 
 - **Course:** Full Stack Development Online (Excelr)
 - **Author:** Avadhoot
@@ -52,21 +53,21 @@ If you skip a month, the bill stays **Overdue** until you pay the missed month.
 
 ## Badge Rules
 
-| Badge               | When it shows                                        | Look                 |
-| ------------------- | ---------------------------------------------------- | -------------------- |
-| Overdue: N months   | One or more earlier months are unpaid                | Red, fast blink      |
-| Overdue by N days   | Due day has passed this month and the bill is unpaid | Red, fast blink      |
-| Due in 0 to 3 days  | 0 to 3 days left and unpaid                          | Orange, medium blink |
-| Due in 4 to 7 days  | 4 to 7 days left and unpaid                          | Yellow, soft pulse   |
-| Due in 8 to 10 days | 8 to 10 days left and unpaid                         | Blue, no animation   |
-| Upcoming            | More than 10 days left                               | Grey, no animation   |
-| Paid                | Paid through the current month                       | Green, no animation  |
+| Badge                          | When it shows                                        | Look                   |
+| ------------------------------ | ---------------------------------------------------- | ---------------------- |
+| Overdue: N months unpaid       | One or more earlier months are unpaid                | Red, fast blink        |
+| Overdue by N days              | Due day has passed this month and the bill is unpaid | Red, fast blink        |
+| Due today / Due in 1 to 3 days | 0 to 3 days left and unpaid                          | Orange, medium blink   |
+| Due in 4 to 7 days             | 4 to 7 days left and unpaid                          | Dark slate, soft pulse |
+| Due in 8 to 10 days            | 8 to 10 days left and unpaid                         | Blue, no animation     |
+| Due in 11+ days                | More than 10 days left                               | Grey, no animation     |
+| Paid                           | Paid through the current month                       | Green, no animation    |
 
 ## Tech Stack
 
 | Part       | Technology                                                              |
 | ---------- | ----------------------------------------------------------------------- |
-| Backend    | Java 17 or higher, Spring Boot (Spring Web, Spring Data JPA)            |
+| Backend    | Java 17 or higher, Spring Boot 4.1 (Spring Web MVC, Spring Data JPA)    |
 | Security   | Spring Security Crypto (BCrypt hashing only), server-side HTTP sessions |
 | Database   | MySQL 8.0                                                               |
 | Frontend   | HTML, CSS, JavaScript                                                   |
@@ -79,6 +80,8 @@ One server runs everything, so no extra setup is needed for cross-origin request
 
 ```
 billreminder/
+├── .mvn/wrapper/
+│   └── maven-wrapper.properties      (Maven wrapper settings)
 ├── database/
 │   ├── schema.sql                    (creates the database and both tables)
 │   └── sample_data.sql               (optional: 8 sample bills for one user)
@@ -105,6 +108,8 @@ billreminder/
 │       └── form.js
 ├── src/test/java/com/example/billreminder/
 │   └── BillreminderApplicationTests.java
+├── mvnw                              (Maven wrapper, Mac and Linux)
+├── mvnw.cmd                          (Maven wrapper, Windows)
 ├── pom.xml
 └── README.md
 ```
@@ -130,6 +135,8 @@ billreminder/
    Open MySQL Workbench or the MySQL command line.
    Run everything inside `database/schema.sql`.
    Run it once. It creates tables, so a second run fails on a database that already has them.
+   Already have an older database? Do not re-run it.
+   Use the upgrade lines at the bottom of `schema.sql` instead.
 
 3. **Set your database password.**
    Copy `src/main/resources/application.properties.example`
@@ -167,6 +174,15 @@ billreminder/
    Then run `database/sample_data.sql` in MySQL.
    It gives `demo` 8 sample bills.
    Rows with no `created_month` count as created this month.
+
+### Run the tests
+
+```
+./mvnw test
+```
+
+The only test loads the Spring context.
+It needs MySQL running and `application.properties` set up.
 
 ## REST API
 
@@ -228,27 +244,4 @@ When a new month starts, `paid_month` falls behind, so the bill becomes unpaid o
 ## Known Limitations
 
 - Sessions live in server memory. Restarting the server logs everyone out.
-- The app uses plain HTTP. Use HTTPS before any real deployment.
-- No login attempt limit, password reset, or account deletion.
-- No CSRF protection.
-- Login and register replies use HTTP 200 with an error text.
-- Summary cards count the current month only. Amounts for missed months are not added.
-- Missed months are tracked per bill as a count. There is no per-month payment record.
-- Java stores money as `double`. The database uses `DECIMAL(10,2)`. Fine at this scale, not for real accounting.
-- The dashboard uses the browser's date. Mark Paid uses the server's month. They differ if the two clocks differ.
-- Deleting a bill is permanent. There is no payment history.
-- The app runs locally only. It is not deployed.
-
-## Planned Features
-
-**Future scope**
-
-- Email and WhatsApp reminders
-- Payment history archive
-- Variable amount tracking, such as electricity units
-- Receipt upload
-- Spend charts by bill type
-
-## Screenshots
-
-Screenshots will be added in a `screenshots` folder.
+- The app uses plain HTTP. Use HTTPS before any
