@@ -14,6 +14,9 @@ var isSaving = false;
 // Ask the server who is logged in. Go to the login page if nobody is
 fetch("/api/auth/me")
   .then(function (response) {
+    if (!response.ok) {
+      throw new Error("Server error");
+    }
     return response.text();
   })
   .then(function (name) {
@@ -27,9 +30,16 @@ fetch("/api/auth/me")
 
 // ---------- Check the page address for an id ----------
 // The address looks like bill-form.html?id=3 when editing
-var query = window.location.search; // gives "?id=3"
-if (query.indexOf("id=") !== -1) {
-  editId = query.split("id=")[1].split("&")[0]; // keeps only the "3"
+// Only digits are accepted. Blocks "?id=../x" and "?foo_id=3"
+var rawId = new URLSearchParams(window.location.search).get("id");
+if (rawId !== null) {
+  if (/^[0-9]+$/.test(rawId)) {
+    editId = rawId;
+  } else {
+    document.getElementById("form-heading").innerText = "Edit Bill";
+    document.getElementById("form-message").innerText = "Invalid bill id";
+    document.getElementById("save-button").disabled = true;
+  }
 }
 
 // ---------- If editing, load the bill into the form ----------
@@ -57,7 +67,7 @@ if (editId !== "") {
       document.getElementById("amount").value = bill.amount;
       document.getElementById("due-day").value = bill.dueDay;
       // Notes can be empty (null), so check first
-      if (bill.notes !== null) {
+      if (bill.notes) {
         document.getElementById("notes").value = bill.notes;
       }
       // Save this so editing does not erase the paid status
@@ -80,8 +90,8 @@ function saveBill() {
   var title = document.getElementById("title").value.trim();
   var billType = document.getElementById("bill-type").value;
   var amount = parseFloat(document.getElementById("amount").value); // text to number
-  var dueDay = parseInt(document.getElementById("due-day").value); // text to whole number
-  var notes = document.getElementById("notes").value;
+  var dueDay = parseInt(document.getElementById("due-day").value, 10); // text to whole number
+  var notes = document.getElementById("notes").value.trim();
   var message = document.getElementById("form-message");
 
   // In edit mode, wait until the old bill has loaded
@@ -97,6 +107,11 @@ function saveBill() {
   }
   if (isNaN(amount) || amount <= 0) {
     message.innerText = "Amount must be more than 0";
+    return;
+  }
+  amount = Math.round(amount * 100) / 100; // 2 decimals, like the database
+  if (amount <= 0 || amount > 99999999) {
+    message.innerText = "Amount must be between 0.01 and 99999999";
     return;
   }
   if (isNaN(dueDay) || dueDay < 1 || dueDay > 31) {
@@ -147,4 +162,14 @@ function saveBill() {
       message.innerText = "Server not reachable";
       isSaving = false;
     });
+}
+
+// ---------- Enter key saves, like the Save button ----------
+var inputs = document.querySelectorAll(".form-box input");
+for (var i = 0; i < inputs.length; i++) {
+  inputs[i].addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      saveBill();
+    }
+  });
 }
