@@ -36,6 +36,44 @@ public class BillController {
         return userId;
     }
 
+    // Stops with error 400 if the bill has bad values
+    private void checkBill(Bill bill) {
+        if (bill.getTitle() == null || bill.getTitle().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title is required");
+        }
+        if (bill.getTitle().length() > 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title is too long");
+        }
+        if (bill.getAmount() <= 0 || bill.getAmount() > 99999999) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad amount");
+        }
+        if (bill.getDueDay() < 1 || bill.getDueDay() > 31) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Due day must be 1 to 31");
+        }
+        if (bill.getNotes() != null && bill.getNotes().length() > 255) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Notes are too long");
+        }
+
+        // Only these four bill types are allowed
+        String type = bill.getBillType();
+        boolean typeOk = false;
+        if ("Utilities".equals(type)) {
+            typeOk = true;
+        }
+        if ("Investment".equals(type)) {
+            typeOk = true;
+        }
+        if ("Loan".equals(type)) {
+            typeOk = true;
+        }
+        if ("Subscription".equals(type)) {
+            typeOk = true;
+        }
+        if (!typeOk) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Bad bill type");
+        }
+    }
+
     // GET /api/bills : return the bills of the logged-in user
     @GetMapping
     public List<Bill> getAllBills(HttpSession session) {
@@ -58,6 +96,8 @@ public class BillController {
     @PostMapping
     public Bill addBill(@RequestBody Bill newBill, HttpSession session) {
         int userId = getLoggedInUserId(session);
+        // Stop here if the values are bad
+        checkBill(newBill);
         // Empty id tells the database to create a new row
         newBill.setId(null);
         // Always use the logged-in user, never a user id sent by the browser
@@ -69,6 +109,8 @@ public class BillController {
     @PutMapping("/{id}")
     public Bill updateBill(@PathVariable Integer id, @RequestBody Bill changedBill, HttpSession session) {
         int userId = getLoggedInUserId(session);
+        // Stop here if the values are bad
+        checkBill(changedBill);
         Optional<Bill> existing = billRepository.findByIdAndUserId(id, userId);
         if (!existing.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Bill not found");
