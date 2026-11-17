@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Monthly Bills - Dashboard</title>
     <link rel="stylesheet" href="style.css" />
   </head>
@@ -10,6 +11,8 @@
     <div class="top-bar">
       <h1>Monthly Bills Dashboard</h1>
       <div>
+        <!-- JavaScript fills the username -->
+        <span id="user-name" class="user-name"></span>
         <a href="bill-form.html" class="button-link">+ Add Bill</a>
         <button onclick="logout()">Logout</button>
       </div>
@@ -33,7 +36,7 @@
 
     <!-- Filter by bill type -->
     <div class="filter-bar">
-      <label>Filter by type:</label>
+      <label for="type-filter">Filter by type:</label>
       <select id="type-filter" onchange="showBills()">
         <option value="All">All</option>
         <option value="Utilities">Utilities</option>
