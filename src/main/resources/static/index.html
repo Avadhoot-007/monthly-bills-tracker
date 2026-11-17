@@ -2,25 +2,30 @@
 <html>
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Monthly Bills - Login</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body class="login-page">
     <div class="login-box">
       <h1>Monthly Bills Tracker</h1>
-      <p>Demo login. Username: admin, Password: 1234</p>
+      <p>Log in to see your bills.</p>
 
-      <label>Username</label>
+      <label for="username">Username</label>
       <input type="text" id="username" />
 
-      <label>Password</label>
+      <label for="password">Password</label>
       <input type="password" id="password" />
 
-      <!-- login() will be written in login.js -->
+      <!-- login() is written in login.js -->
       <button onclick="login()">Login</button>
 
       <!-- Error message shows here -->
       <p id="login-message" class="error-text"></p>
+
+      <p class="link-text">
+        New here? <a href="register.html">Create an account</a>
+      </p>
     </div>
 
     <script src="login.js"></script>
