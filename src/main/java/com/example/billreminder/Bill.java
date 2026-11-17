@@ -32,9 +32,13 @@ public class Bill {
     @Column(name = "due_day")
     private int dueDay;
 
-    // Example: 2026-11. Empty means never paid
+    // Paid through this month, like 2026-11. Empty means nothing paid yet
     @Column(name = "paid_month")
     private String paidMonth;
+
+    // Month the bill was added, like 2026-09. Earlier months are never owed
+    @Column(name = "created_month")
+    private String createdMonth;
 
     private String notes;
 
@@ -94,6 +98,14 @@ public class Bill {
 
     public void setPaidMonth(String paidMonth) {
         this.paidMonth = paidMonth;
+    }
+
+    public String getCreatedMonth() {
+        return createdMonth;
+    }
+
+    public void setCreatedMonth(String createdMonth) {
+        this.createdMonth = createdMonth;
     }
 
     public String getNotes() {
