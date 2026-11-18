@@ -324,8 +324,8 @@ tbody tr:hover {
 
 /* Due in 4 to 7 days: yellow, soft pulse */
 .badge-7days {
-  background-color: #f9c20a;
-  color: #2b2f3a;
+  background-color: #37474f;
+  color: white;
   animation: pulse-soft 2s infinite;
 }
 
