@@ -135,7 +135,7 @@ billreminder/
 2. **Create the database.**
    Open MySQL Workbench or the MySQL command line.
    Run everything inside `database/schema.sql`.
-   Run it once. It creates tables, so a second run fails on a database that already has them.
+   Run it once. It is safe to run again, it never deletes anything.
    Already have an older database? Do not re-run it.
    Use the upgrade lines at the bottom of `schema.sql` instead.
 
@@ -174,7 +174,7 @@ billreminder/
    Register a user named `demo` first.
    Then run `database/sample_data.sql` in MySQL.
    It gives `demo` 8 sample bills.
-   Rows with no `created_month` count as created this month.
+   Running it twice adds the bills twice. Run it once.
 
 ### Run the tests
 
